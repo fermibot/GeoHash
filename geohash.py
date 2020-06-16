@@ -74,7 +74,7 @@ class GeoHash():
 
 if __name__ == '__main__':
     for hash_kind in [32, 64]:
-        print(f"Hash type is {hash_kind}ghs")
+        print(f"Hash type : {hash_kind}ghs")
         geo_hash = GeoHash(hash_type=hash_kind)
         lat_long_pair = [42.605, -5.603]
         calculated_hash = geo_hash.lat_long_to_geo_hash(lat_long_pair[0], lat_long_pair[1])
