@@ -9,7 +9,7 @@ from math import pi
 from typing import List
 
 
-class GeoHash:
+class Geohash:
     def __init__(self, hash_type: int = 32):
         self.geo_hash_dict = load(open(f'geohash_alphabet_{hash_type}ghs.json', 'r'))
         self.geo_hash_dict_reverse = [
@@ -22,13 +22,15 @@ class GeoHash:
         self.bit_wrap = {
             32: 5,
             64: 6,
-            256: 8
+            256: 8,
+            4096: 12
         }
 
         self.hash_wrap = {
             32: 1,
             64: 1,
-            256: 2
+            256: 2,
+            4096: 2
         }
 
     @staticmethod
@@ -105,11 +107,6 @@ class GeoHash:
         theta_code = self.hash_encoder(theta, theta_range, self.bit_wrap[self.hash_type] * precision)
         phi_code = self.hash_encoder(phi, phi_range, self.bit_wrap[self.hash_type] * precision)
 
-        param_ranges = [long_range, lat_range, theta_range, phi_range]
-
-        # param_codes = [self.hash_encoder(x, y, self.bit_wrap[self.hash_type] * precision) for x, y in
-        #                zip([long, lat, theta, phi], param_ranges)]
-
         # noinspection PyTypeChecker
         binaries = wrap(''.join([val for pair in zip(long_code, lat_code, theta_code, phi_code) for val in pair]),
                         self.bit_wrap[self.hash_type])
@@ -121,19 +118,24 @@ class GeoHash:
 
 
 if __name__ == '__main__':
-    for hash_kind in [32, 64, 256]:
+    for hash_kind in [32, 64, 256, 4096]:
         print(f"Hash type : {hash_kind}ghs")
-        geo_hash = GeoHash(hash_type=hash_kind)
+        geo_hash = Geohash(hash_type=hash_kind)
         lat_long_pair = [-5.603, 42.605]
         calculated_hash = geo_hash.lat_long_to_geo_hash(lat_long_pair[0], lat_long_pair[1])
         print(f"Calculated hash for Lat-Long of {lat_long_pair} is {calculated_hash}")
         print(f"Recalculated Lat-Long from the above hash are {geo_hash.geo_hash_to_lat_long(calculated_hash)}")
-        if hash_kind == 256:
+        if hash_kind in [256, 4096]:
             print("\nQuartet Notation")
             quartet = [-5.603, 42.605, 4.815615568277845, -0.6845378023414236]
-            # quartet = [0, 0, 0, 0]
             calculated_hash = geo_hash.lat_long_theta_phi_to_geo_hash(quartet[0], quartet[1], quartet[2], quartet[3])
             print(f"Calculated hash for Lat-Long of {quartet} is {calculated_hash}")
             print(
                 f"Recalculated Lat-Long from the above hash are {geo_hash.geo_hash_to_lat_long_theta_phi(calculated_hash)}")
-        print()
+
+            if hash_kind == 4096:
+                sextet = [-5.603, 42.605, 4.815615568277845, -0.6845378023414236, 1]
+
+        print('_' * 120)
+
+        import geohash_unittest
