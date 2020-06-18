@@ -18,13 +18,16 @@ class GeohashUnittest(unittest.TestCase):
             if hash_kind in [256, 4096]:
                 print(f"\tTesting quartets for: {hash_kind}ghs")
                 quartet = [-5.6034, 42.6057, 4.8153, -0.6849]
-                calculated_hash = geo_hash.lat_long_theta_phi_to_geo_hash(*quartet)
-                calculated_nums = [round(x, 4) for x in geo_hash.geo_hash_to_lat_long_theta_phi(calculated_hash)]
+                calculated_hash = geo_hash.nums_to_geohash(quartet)
+                calculated_nums = [round(x, 4) for x in geo_hash.hash_to_nums(calculated_hash)]
                 self.assertEqual(quartet, calculated_nums)
                 if hash_kind == 4096:
-                    sextet = [-5.603, 42.605, 4.815615568277845, -0.6845378023414236, 1]
-
-        self.assertEqual(True, True)
+                    print(f"\t\tTesting sextets for: {hash_kind}ghs")
+                    sextet = [-5.6034, 42.6057, 4.8153, -0.6849, 5.9462, 54.6548]
+                    calculated_hash = geo_hash.nums_to_geohash(sextet)
+                    calculated_nums = [round(x, 4) for x in
+                                       geo_hash.hash_to_nums(calculated_hash, split_type=6)]
+                    self.assertEqual(sextet, calculated_nums)
 
 
 if __name__ == '__main__':

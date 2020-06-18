@@ -33,6 +33,13 @@ class Geohash:
             4096: 2
         }
 
+        self.split_type = {
+            32: 2,
+            64: 2,
+            256: 4,
+            4056: 6
+        }
+
     @staticmethod
     def binary_to_number(lat_long_code, lat_long_range):
         for i in lat_long_code:
@@ -42,22 +49,15 @@ class Geohash:
                 lat_long_range[0] = mean(lat_long_range)
         return mean(lat_long_range)
 
-    # def geo_hash_to_lat_long(self, geo_hash_string: str) -> [float, float]:
-    #     lat_range = [-90, 90]
-    #     long_range = [-180, 180]
-    #
-    #     lat_long_string = "".join([self.geo_hash_dict[1][str(self.geo_hash_dict[0][i])] for i in
-    #                                wrap(geo_hash_string, self.hash_wrap[self.hash_type])])
-    #     [long_code, lat_code] = [lat_long_string[x::2] for x in range(2)]
-    #     return [self.binary_to_number(lat_code, lat_range), self.binary_to_number(long_code, long_range)]
-
-    def geo_hash_to_lat_long_theta_phi(self, geo_hash_string: str, split_type: int = 4) -> List[float]:
+    def hash_to_nums(self, geo_hash_string: str, split_type: int = 4) -> List[float]:
         long_range = [-180, 180]
         lat_range = [-90, 90]
         theta_range = [-2 * pi, 2 * pi]
         phi_range = [-pi, pi]
+        alpha_range = [-10, 10]
+        beta_range = [-34, 67]
 
-        param_ranges = [long_range, lat_range, theta_range, phi_range]
+        param_ranges = [long_range, lat_range, theta_range, phi_range, alpha_range, beta_range]
         param_ranges = param_ranges[:split_type]
         lat_long_string = "".join([self.geo_hash_dict[1][str(self.geo_hash_dict[0][i])] for i in
                                    wrap(geo_hash_string, self.hash_wrap[self.hash_type])])
@@ -68,7 +68,7 @@ class Geohash:
                 zip(param_codes, param_ranges)]
 
     def geo_hash_to_lat_long(self, geo_hash_string: str) -> List[float]:
-        return self.geo_hash_to_lat_long_theta_phi(geo_hash_string=geo_hash_string, split_type=2)
+        return self.hash_to_nums(geo_hash_string=geo_hash_string, split_type=2)
 
     @staticmethod
     def hash_encoder(lat_long, lat_long_range, precision) -> int:
@@ -84,8 +84,8 @@ class Geohash:
         return lat_long_code
 
     def lat_long_to_geo_hash(self, long, lat, precision: int = 8) -> str:
-        lat_range = [-90, 90]
         long_range = [-180, 180]
+        lat_range = [-90, 90]
         lat_code = self.hash_encoder(lat, lat_range, self.bit_wrap[self.hash_type] * precision)
         long_code = self.hash_encoder(long, long_range, self.bit_wrap[self.hash_type] * precision)
         # noinspection PyTypeChecker
@@ -96,21 +96,18 @@ class Geohash:
             geo_hash_out = geo_hash_out + self.geo_hash_dict_reverse[0][self.geo_hash_dict_reverse[1][binary]]
         return geo_hash_out
 
-    def lat_long_theta_phi_to_geo_hash(self, long, lat, theta, phi, precision: int = 8) -> str:
-        lat_range = [-90, 90]
+    def nums_to_geohash(self, nums: list, precision: int = 8) -> str:
         long_range = [-180, 180]
+        lat_range = [-90, 90]
         theta_range = [-2 * pi, 2 * pi]
         phi_range = [-pi, pi]
+        alpha_range = [-10, 10]
+        beta_range = [-34, 67]
 
-        lat_code = self.hash_encoder(lat, lat_range, self.bit_wrap[self.hash_type] * precision)
-        long_code = self.hash_encoder(long, long_range, self.bit_wrap[self.hash_type] * precision)
-        theta_code = self.hash_encoder(theta, theta_range, self.bit_wrap[self.hash_type] * precision)
-        phi_code = self.hash_encoder(phi, phi_range, self.bit_wrap[self.hash_type] * precision)
-
-        # noinspection PyTypeChecker
-        binaries = wrap(''.join([val for pair in zip(long_code, lat_code, theta_code, phi_code) for val in pair]),
-                        self.bit_wrap[self.hash_type])
-
+        ranges = [long_range, lat_range, theta_range, phi_range, alpha_range, beta_range]
+        ranges = ranges[:len(nums)]
+        codes = [self.hash_encoder(x, y, self.bit_wrap[self.hash_type] * precision) for x, y in zip(nums, ranges)]
+        binaries = wrap(''.join([val for pair in zip(*codes) for val in pair]), self.bit_wrap[self.hash_type])
         geo_hash_out = "".join(
             [self.geo_hash_dict_reverse[0][self.geo_hash_dict_reverse[1][binary]] for binary in binaries])
 
@@ -118,24 +115,21 @@ class Geohash:
 
 
 if __name__ == '__main__':
-    for hash_kind in [32, 64, 256, 4096]:
-        print(f"Hash type : {hash_kind}ghs")
-        geo_hash = Geohash(hash_type=hash_kind)
-        lat_long_pair = [-5.603, 42.605]
-        calculated_hash = geo_hash.lat_long_to_geo_hash(lat_long_pair[0], lat_long_pair[1])
-        print(f"Calculated hash for Lat-Long of {lat_long_pair} is {calculated_hash}")
-        print(f"Recalculated Lat-Long from the above hash are {geo_hash.geo_hash_to_lat_long(calculated_hash)}")
-        if hash_kind in [256, 4096]:
-            print("\nQuartet Notation")
-            quartet = [-5.603, 42.605, 4.815615568277845, -0.6845378023414236]
-            calculated_hash = geo_hash.lat_long_theta_phi_to_geo_hash(quartet[0], quartet[1], quartet[2], quartet[3])
-            print(f"Calculated hash for Lat-Long of {quartet} is {calculated_hash}")
-            print(
-                f"Recalculated Lat-Long from the above hash are {geo_hash.geo_hash_to_lat_long_theta_phi(calculated_hash)}")
+    # for hash_kind in [32, 64, 256, 4096]:
+    #     print(f"Hash type : {hash_kind}ghs")
+    #     geo_hash = Geohash(hash_type=hash_kind)
+    #     lat_long_pair = [-5.603, 42.605]
+    #     calculated_hash = geo_hash.lat_long_to_geo_hash(lat_long_pair[0], lat_long_pair[1])
+    #     print(f"Calculated hash for Lat-Long of {lat_long_pair} is {calculated_hash}")
+    #     print(f"Recalculated Lat-Long from the above hash are {geo_hash.geo_hash_to_lat_long(calculated_hash)}")
+    #     if hash_kind in [256, 4096]:
+    #         print("\nQuartet Notation")
+    #         quartet = [-5.603, 42.605, 4.815615568277845, -0.6845378023414236]
+    #         calculated_hash = geo_hash.lat_long_theta_phi_to_geo_hash(quartet)
+    #         print(f"Calculated hash for Lat-Long of {quartet} is {calculated_hash}")
+    #         print(
+    #             f"Recalculated Lat-Long from the above hash are {geo_hash.geo_hash_to_lat_long_theta_phi(calculated_hash)}")
 
-            if hash_kind == 4096:
-                sextet = [-5.603, 42.605, 4.815615568277845, -0.6845378023414236, 1]
+    # print('_' * 120)
 
-        print('_' * 120)
-
-        import geohash_unittest
+    import geohash_unittest
