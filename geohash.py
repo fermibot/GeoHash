@@ -7,6 +7,7 @@ from statistics import mean
 from textwrap import wrap
 from math import pi
 from typing import List
+from random import random
 
 
 class Geohash:
