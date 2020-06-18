@@ -7,7 +7,7 @@ class GeohashUnittest(unittest.TestCase):
     def test_all_geohash_use_cases(self):
         print()
         for hash_kind in [32, 64, 256, 4096]:
-            print(f"Testing: {hash_kind}ghs")
+            print(f"Testing pairs for {hash_kind}ghs")
             geohash_inst = Geohash(hash_type=hash_kind)
 
             lat_long_pair = [-5.6034, 42.6057]
@@ -21,13 +21,13 @@ class GeohashUnittest(unittest.TestCase):
             self.assertEqual(lat_long_pair, calculated_nums)
 
             if hash_kind in [256, 4096]:
-                print(f"\tTesting quartets for: {hash_kind}ghs")
+                print(f"\tTesting quartets for {hash_kind}ghs")
                 quartet = [-5.6034, 42.6057, 4.8153, -0.6849]
                 calculated_hash = geohash_inst.nums_to_geohash(quartet)
                 calculated_nums = [round(x, 4) for x in geohash_inst.hash_to_nums(calculated_hash, split_type=4)]
                 self.assertEqual(quartet, calculated_nums)
                 if hash_kind == 4096:
-                    print(f"\t\tTesting sextets for: {hash_kind}ghs")
+                    print(f"\t\tTesting sextets for {hash_kind}ghs")
                     sextet = [-5.6034, 42.6057, 4.8153, -0.6849, 5.9462, 54.6548]
                     calculated_hash = geohash_inst.nums_to_geohash(sextet)
                     calculated_nums = [round(x, 4) for x in
