@@ -39,9 +39,6 @@ class GeohashUnittest(unittest.TestCase):
                                        geohash_inst.hash_to_nums(calculated_hash, split_type=6)]
                     self.assertEqual(sextet, calculated_nums)
 
-    def test(self):
-        assert (True, True)
-
 
 if __name__ == '__main__':
     unittest.main()
